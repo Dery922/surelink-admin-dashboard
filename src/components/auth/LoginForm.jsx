@@ -1,9 +1,36 @@
+/**
+ * LoginForm.jsx
+ *
+ * Two-step admin login form.
+ *
+ * Step 1 — CredentialsStep:
+ *   Admin enters email + password. On success the backend returns a
+ *   `pending_token` (short-lived Redis key) and a 6-digit OTP is sent
+ *   to their registered email. The pending_token is stored in component
+ *   state only — it never touches localStorage.
+ *
+ * Step 2 — OtpStep:
+ *   Admin enters the 6-digit OTP using the OtpBoxes input. On success
+ *   the backend returns a session token which AuthContext stores in
+ *   localStorage and sets the admin state. The user is then redirected
+ *   to the page they originally tried to visit (or /dashboard).
+ *
+ * If the OTP is entered incorrectly 5 times the backend locks the
+ * pending state. The form shows only a "Back to login" button so the
+ * admin must start over from step 1.
+ *
+ * If the OTP expires (10-minute TTL) or the admin clicks "Resend code",
+ * a new OTP is issued with a new pending_token. The old one is invalidated.
+ */
+
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.js';
 import { resendOtpRequest } from '../../api/adminAuth.js';
 
 // ─── Error message map ────────────────────────────────────────
+// Maps backend error codes to user-facing messages.
+// A null value means we use the server's message verbatim (e.g. OTP attempt counts).
 const CRED_ERRORS = {
   ADMIN_AUTH_INVALID_CREDENTIALS: 'Invalid email or password.',
   ADMIN_AUTH_ACCOUNT_INACTIVE: 'Account is inactive. Contact a Super Admin.',
@@ -24,6 +51,12 @@ function errorMsg(map, code, serverMessage) {
 }
 
 // ─── 6-box OTP input ─────────────────────────────────────────
+/**
+ * Renders 6 individual single-character inputs that behave as one OTP field.
+ * - Typing a digit auto-advances focus to the next box.
+ * - Backspace on an empty box moves focus back and clears the previous box.
+ * - Pasting a 6-digit string fills all boxes at once.
+ */
 function OtpBoxes({ value, onChange, disabled }) {
   const refs = useRef([]);
 
@@ -82,7 +115,12 @@ function OtpBoxes({ value, onChange, disabled }) {
   );
 }
 
-// ─── Credentials step ────────────────────────────────────────
+// ─── Step 1: Credentials ─────────────────────────────────────
+/**
+ * Collects email + password and calls loginRequest via AuthContext.login().
+ * On success, calls onSuccess(result) with the pending_token and optional
+ * dev_otp so the parent can transition to the OTP step.
+ */
 function CredentialsStep({ onSuccess }) {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
@@ -165,7 +203,17 @@ function CredentialsStep({ onSuccess }) {
   );
 }
 
-// ─── OTP step ────────────────────────────────────────────────
+// ─── Step 2: OTP verification ────────────────────────────────
+/**
+ * Accepts the pending_token from step 1 and the OTP the admin enters.
+ * On success, calls onSuccess() which triggers navigation to the dashboard.
+ *
+ * State:
+ *   currentPendingToken — updated on resend (backend issues a new one)
+ *   locked              — true after 5 failed attempts; hides the form
+ *
+ * devOtp is shown inline in development so testers don't need to check email.
+ */
 function OtpStep({ pendingToken, devOtp, onBack, onSuccess }) {
   const { verifyOtp } = useAuth();
   const [otp, setOtp] = useState('');
@@ -173,6 +221,7 @@ function OtpStep({ pendingToken, devOtp, onBack, onSuccess }) {
   const [resending, setResending] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  // currentPendingToken may change if the admin resends — always use this, not the prop
   const [currentPendingToken, setCurrentPendingToken] = useState(pendingToken);
   const [locked, setLocked] = useState(false);
 
@@ -201,6 +250,7 @@ function OtpStep({ pendingToken, devOtp, onBack, onSuccess }) {
     setNotice('');
     setResending(true);
     try {
+      // Backend invalidates the old OTP and returns a new pending_token
       const result = await resendOtpRequest(currentPendingToken);
       setCurrentPendingToken(result.pending_token);
       setOtp('');
@@ -247,6 +297,7 @@ function OtpStep({ pendingToken, devOtp, onBack, onSuccess }) {
         </div>
       )}
 
+      {/* Locked state — too many wrong attempts, force admin to start over */}
       {locked ? (
         <button onClick={onBack}
           className="w-full bg-[#0057FF] text-white font-bold text-xs px-4 py-2.5 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
@@ -282,6 +333,14 @@ function OtpStep({ pendingToken, devOtp, onBack, onSuccess }) {
 }
 
 // ─── Page shell ───────────────────────────────────────────────
+/**
+ * LoginForm — root component for the /login page.
+ *
+ * Manages which step is active ('credentials' | 'otp') and passes
+ * the pending_token down to OtpStep via props. On successful OTP
+ * verification, navigates the admin to wherever they originally
+ * tried to go (or /dashboard as default).
+ */
 export default function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -310,7 +369,7 @@ export default function LoginForm() {
   return (
     <div className="w-full md:w-[58%] bg-gray-50 flex items-center justify-center p-6 md:p-12">
       <div className="w-full max-w-sm">
-        {/* Mobile brand */}
+        {/* Mobile brand mark — hidden on desktop where the left panel shows it */}
         <div className="md:hidden flex items-center gap-2.5 mb-8">
           <div className="w-8 h-8 rounded-lg bg-[#0057FF] flex items-center justify-center shadow-sm">
             <i className="fa-solid fa-shield-halved text-white text-xs" />
@@ -321,7 +380,7 @@ export default function LoginForm() {
           </div>
         </div>
 
-        {/* Step indicator */}
+        {/* Step indicator: circle 1 → circle 2, turns green when passed */}
         <div className="flex items-center gap-2 mb-5">
           {['credentials', 'otp'].map((s, i) => (
             <div key={s} className="flex items-center gap-2">
