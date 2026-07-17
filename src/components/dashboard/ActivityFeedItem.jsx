@@ -1,15 +1,26 @@
 import { relativeTime } from '../../utils/relativeTime.js';
 
+// Map an icon text-color token to a matching tint background for the chip.
+const BG_TINT = {
+  'text-[#0057FF]': 'bg-[#EEF4FF]',
+  'text-[#FF6B00]': 'bg-orange-50',
+  'text-green-500': 'bg-green-50',
+  'text-green-600': 'bg-green-50',
+  'text-emerald-600': 'bg-emerald-50',
+  'text-gray-500': 'bg-gray-100',
+};
+
 export default function ActivityFeedItem({ text, time, icon, iconColor }) {
+  const bg = BG_TINT[iconColor] || 'bg-gray-50';
   return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
-      <div className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <i className={`${icon} ${iconColor} text-xs`} />
+    <li className="relative flex gap-4 py-2.5">
+      <div className={`z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${bg} ${iconColor} ring-4 ring-white`}>
+        <i className={`${icon} text-[13px]`} />
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs text-[#1A1A1A] leading-snug font-medium">{text}</p>
-        <p className="text-[11px] text-gray-400 mt-0.5">{relativeTime(time)}</p>
+      <div className="min-w-0 flex-1 pt-0.5">
+        <p className="text-[13px] text-[#1A1A1A] leading-snug">{text}</p>
+        <p className="mt-0.5 text-[11.5px] text-gray-400">{relativeTime(time)}</p>
       </div>
-    </div>
+    </li>
   );
 }
