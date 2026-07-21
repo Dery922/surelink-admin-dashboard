@@ -23,6 +23,30 @@ export const NAV_ITEMS = [
     roles: ['SUPER_ADMIN', 'OPERATIONS_ADMIN'],
   },
   {
+    label: 'Bookings',
+    path: '/bookings',
+    icon: 'fa-solid fa-calendar-check',
+    roles: ['SUPER_ADMIN', 'OPERATIONS_ADMIN'],
+  },
+  {
+    label: 'Transactions',
+    path: '/transactions',
+    icon: 'fa-solid fa-receipt',
+    roles: ['SUPER_ADMIN', 'OPERATIONS_ADMIN'],
+  },
+  {
+    label: 'Customers',
+    path: '/customers',
+    icon: 'fa-solid fa-users',
+    roles: ['SUPER_ADMIN', 'OPERATIONS_ADMIN'],
+  },
+  {
+    label: 'Verifications',
+    path: '/verifications',
+    icon: 'fa-solid fa-id-card',
+    roles: ['SUPER_ADMIN', 'PROVIDER_MANAGEMENT_ADMIN'],
+  },
+  {
     label: 'Settings',
     path: '/settings',
     icon: 'fa-solid fa-gear',
