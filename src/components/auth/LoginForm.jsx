@@ -47,7 +47,7 @@ function CredentialsStep({ onSuccess }) {
       onSuccess();
     } catch (err) {
       setPassword('');
-      const code = err?.response?.data?.error?.code;
+      const code = err?.response?.data?.code;
       setError(errorMsg(CRED_ERRORS, code));
       setLoading(false);
     }
