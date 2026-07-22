@@ -19,9 +19,7 @@ export default function Sidebar() {
     <aside className="fixed inset-y-0 left-0 w-60 bg-white border-r border-gray-200 flex flex-col z-20">
       {/* Logo */}
       <div className="h-14 flex items-center gap-3 px-5 border-b border-gray-100 flex-shrink-0">
-        <div className="w-9 h-9 rounded-xl bg-[#0057FF] flex items-center justify-center flex-shrink-0 shadow-[0_2px_8px_-1px_rgba(0,87,255,0.45)]">
-          <i className="fa-solid fa-shield-halved text-white text-[15px]" />
-        </div>
+        <img src="/Logo.png" alt="SureLink" className="h-9 w-auto flex-shrink-0" />
         <div className="leading-tight">
           <p className="font-bold text-[#1A1A1A] text-[14px] tracking-tight">SureLink</p>
           <p className="text-[11px] text-gray-400 font-medium">Admin Portal</p>
