@@ -7,10 +7,7 @@ export default function LoginBrandPanel() {
       <div className="absolute top-1/2 left-1/2 w-80 h-80 rounded-full bg-white/[0.03] -translate-x-1/2 -translate-y-1/2" />
 
       <div className="relative z-10 flex flex-col items-center text-center max-w-xs">
-        {/* Shield */}
-        <div className="w-16 h-16 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center mb-6 shadow-lg">
-          <i className="fa-solid fa-shield-halved text-3xl text-white" />
-        </div>
+        <img src="/Logo.png" alt="SureLink" className="h-20 w-auto mb-6 drop-shadow-lg" />
 
         <h1 className="text-2xl font-bold mb-1 tracking-tight">SureLink</h1>
         <p className="text-blue-100 text-sm font-medium mb-8">Admin Portal</p>

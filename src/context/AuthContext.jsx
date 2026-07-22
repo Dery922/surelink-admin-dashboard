@@ -3,7 +3,6 @@ import {
   getMeRequest,
   loginRequest,
   logoutRequest,
-  verifyOtpRequest,
 } from "../api/adminAuth.js";
 import { STORAGE_KEY } from "../api/client.js";
 
@@ -27,21 +26,11 @@ export function AuthProvider({ children }) {
   }, []);
 
   /**
-   * Step 1 — validate credentials.
-   * Returns { requires_otp: true, pending_token, dev_otp? } to the caller.
-   * The caller (LoginForm) owns the pending_token in component state —
-   * it is never stored in localStorage.
+   * Validate credentials, store the session token, and set admin state.
+   * Returns the admin object on success.
    */
   const login = useCallback(async (email, password) => {
-    return loginRequest(email, password);
-  }, []);
-
-  /**
-   * Step 2 — verify OTP and complete login.
-   * Stores session token, sets admin state.
-   */
-  const verifyOtp = useCallback(async (pending_token, otp) => {
-    const { admin: adminData, session } = await verifyOtpRequest(pending_token, otp);
+    const { admin: adminData, session } = await loginRequest(email, password);
     localStorage.setItem(STORAGE_KEY, session.token);
     setAdmin(adminData);
     return adminData;
@@ -55,7 +44,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ admin, isLoading, isAuth: admin !== null, login, verifyOtp, logout }}>
+    <AuthContext.Provider value={{ admin, isLoading, isAuth: admin !== null, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
